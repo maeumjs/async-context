@@ -9,16 +9,16 @@
 [![ci](https://github.com/maeumjs/async-context/actions/workflows/ci.yml/badge.svg)](https://github.com/maeumjs/async-context/actions/workflows/ci.yml)
 [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
 
-Packages for enhance [async context](https://github.com/tc39/proposal-async-context) mechanishm
+maeum 환경에서 async-context를 활용하기 위한 라이브러리
 
 ## Why @maeum/async-context?
 
-[async context](https://github.com/tc39/proposal-async-context) is a new proposal that is in Stage 2. It's a replacement for Domain after it was removed from the Node.js environment, and a way to manage context in an efficient way. When you run an async function, you specify a store to share, and then the store can be accessed by the async function and other functions run by the async function.
+[async context](https://github.com/tc39/proposal-async-context)는 Stage 2 단계에 있는 새로운 proposal입니다. Node.js 환경에서 Domain이 제거된 후 이를 대체하고, 효율적인 방법으로 context를 관리할 수 있는 방법입니다. async 함수를 실행할 때 공유할 store를 지정하고 이 후 async 함수와 async 함수에서 실행한 다른 함수에서 store에 접근할 수 있습니다.
 
-For example, in [fastify.js](https://fastify.dev/), each request is given a unique ID. This unique ID can be useful for analyzing DB query errors, analyzing slow queries, tracking logic errors, and more. In order to log the ID, you have to pass the request object, but with async-context, you can get the context, ID, etc. without passing the request object. You can use the fastify-request-context plugin to add an async-context to a request, and you can use @maeum/async-context to explore the async-context you've added.
+예를들면 fastify.js에서 각 request 마다 고유 id를 부여합니다. 이 고유 id는 DB 쿼리 오류 분석, 슬로우 쿼리 분석, 로직 오류 등을 추적할 때 유용하게 사용할 수 있습니다. id를 로그에 기록하기 위해서 request 객체를 전달해야 하지만 async-context를 사용하면 request 객체를 전달하지 않아도 context, id 등을 얻을 수 있습니다. fastify-request-context 플러그인을 사용하여 request에 async-context를 추가할 수 있고, @maeum/async-context를 사용하여 추가한 async-context를 탐색할 수 있습니다.
 
-1. adding an async-context to the fastify.js [FastifyRequest](https://fastify.dev/docs/latest/Reference/Request/) object
-1. navigate to the async-context even if you don't pass a FastifyRequest object
+1. fastify.js FastifyRequest 객체에 async-context 추가
+1. FastifyRequest 객체를 전달하지 않더라도 async-context 탐색
 
 ## Table of Contents
 
@@ -61,7 +61,7 @@ flowchart TD
     H -.-o C
 ```
 
-As shown, you can use AsyncLocalStore to execute the async function and register a watcher to navigate to the AsyncResource. This method allows you to browse the AsyncResource using the executionAsyncId function without passing a FastifyRequest or AsyncLocalStore.
+그림과 같이, AsyncLocalStore를 사용하여 async function을 실행하고, watcher를 등록하여 AsyncResource를 탐색할 수 있습니다. 이 방법을 사용하면 Request 또는 Store를 전달하지 않아도 executionAsyncId 함수를 사용하여 AsyncResource를 탐색할 수 있습니다.
 
 ## Usage
 
@@ -85,7 +85,7 @@ const prisma = new PrismaClient({
   ],
 });
 
-// To get the request id in the event handler, you can use the AsyncContainer's getStore function to access the context
+// event handler에서 request id를 얻기 위해 AsyncContainer의 getStore함수를 사용하여 context에 접근할 수 있습니다
 prisma.$on('query', (e) => {
   const store = AsyncContainer.getStore(executionAsyncId());
   console.log(store.id, e.query, e.params);

@@ -48,25 +48,26 @@ module.exports = {
     // ----------------------------------------------------------------------------------------------------------
     // @typescript-eslint
     // ----------------------------------------------------------------------------------------------------------
-    '@typescript-eslint/naming-convention': [
-      'error',
-      {
-        selector: 'interface',
-        format: ['PascalCase'],
-        custom: {
-          regex: '^I[A-Z]+',
-          match: true,
-        },
-      },
-      {
-        selector: 'typeAlias',
-        format: ['PascalCase'],
-        custom: {
-          regex: '^T[A-Z]+',
-          match: true,
-        },
-      },
-    ],
+    // '@typescript-eslint/naming-convention': [
+    //   'error',
+    //   {
+    //     selector: 'interface',
+    //     format: ['PascalCase'],
+    //     custom: {
+    //       regex: '^I[A-Z]+',
+    //       match: true,
+    //     },
+    //   },
+    //   {
+    //     selector: 'typeAlias',
+    //     format: ['PascalCase'],
+    //     custom: {
+    //       regex: '^T[A-Z]+',
+    //       match: true,
+    //     },
+    //   },
+    // ],
+
     '@typescript-eslint/member-delimiter-style': [
       'off',
       {
@@ -101,7 +102,7 @@ module.exports = {
   },
   overrides: [
     {
-      files: ['jest.config.cjs'],
+      files: ['vitest.config.ts'],
       rules: {
         'import/no-extraneous-dependencies': ['off'],
         '@typescript-eslint/no-unsafe-call': ['off'],
@@ -112,13 +113,10 @@ module.exports = {
       },
     },
     {
-      files: ['logger.ts'],
+      files: ['**/CE_*.ts'],
       rules: {
-        '@typescript-eslint/no-explicit-any': ['off'],
-        '@typescript-eslint/no-unsafe-argument': ['off'],
-        '@typescript-eslint/no-non-null-assertion': ['off'],
-        '@typescript-eslint/no-unsafe-call': ['off'],
-        '@typescript-eslint/no-unsafe-assignment': ['off'],
+        '@typescript-eslint/no-redeclare': ['off'],
+        '@typescript-eslint/naming-convention': ['off'],
       },
     },
     {
