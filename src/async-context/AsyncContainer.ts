@@ -141,11 +141,11 @@ export class AsyncContainer {
       return resource as T;
     }
 
-    const guard = this.options.searchGuard;
-    let id = this.#idMap.get(asyncId);
-    let sentinel = 0;
-
     const finded = await new Promise<T | undefined>((resolve) => {
+      const guard = this.options.searchGuard;
+      let id = this.#idMap.get(asyncId);
+      let sentinel = 0;
+
       const handle = setInterval(() => {
         if (id == null) {
           clearInterval(handle);
