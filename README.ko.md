@@ -67,14 +67,60 @@ flowchart TD
 
 ```ts
 import fastify from 'fastify';
-import { maeumAsyncContext, AsyncContainer } from '@maeum/async-context';
+import { AsyncContainer } from '@maeum/async-context';
 import { PrismaClient } from '@prisma/client';
 import { executionAsyncId } from 'node:async_hooks';
+import { fastifyRequestContext } from '@fastify/request-context';
 
-AsyncContainer.bootstrap();
+AsyncContainer.bootstrap({ resourceTypes: ['request-id-tracker'] });
+
+class TrackerAsyncResource {
+  #tid: string;
+
+  #lang: string | undefined;
+
+  constructor(tid: string, lang: string | undefined, type?: string, triggerAsyncId?: number) {
+    super(type ?? CE_SERVER_DEFAULT_VALUE.TRACKING_ID_AC, triggerAsyncId);
+
+    this.#tid = tid;
+    this.#lang = lang;
+  }
+
+  get tid() {
+    return this.#tid;
+  }
+
+  get lang() {
+    return this.#lang;
+  }
+}
+
+async function petSelectDao(petId: string) {
+  console.log('id is same, ', req.id, (await AsyncContainer.getStore(executionAsyncId())).tid);
+  return prismaClient.find({ id: petId });
+}
 
 const server = fastify({ logger: true });
-server.regiger(maeumAsyncContext);
+
+server.regiger(fastifyRequestContext, {
+  defaultStoreValues: (req) => ({ tid: req.id }),
+  createAsyncResource: (req) => {
+    const resource = new TrackerAsyncResource(
+      req.id,
+      req.headers['accept-language'],
+      'request-id-tracker',
+      executionAsyncId(),
+    );
+    AsyncContainer.it.setStore(executionAsyncId(), resource);
+    return resource;
+  },
+});
+
+server.get(async (req) => {
+  console.log('id is same, ', req.id, (await AsyncContainer.getStore(executionAsyncId())).tid);
+  const pet = await petSelectDao({ petId: req.query.id });
+  return pet;
+});
 
 const prisma = new PrismaClient({
   log: [

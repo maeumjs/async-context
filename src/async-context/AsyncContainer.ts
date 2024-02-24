@@ -25,8 +25,16 @@ export class AsyncContainer {
     }
   }
 
+  static setStore<T = AsyncResource>(asyncId: number, resource: T) {
+    return AsyncContainer.#it.setStore<T>(asyncId, resource);
+  }
+
   static getStore<T = AsyncResource>(asyncId: number) {
     return AsyncContainer.#it.getStore<T>(asyncId);
+  }
+
+  static async getStoreAsync<T = AsyncResource>(asyncId: number) {
+    return AsyncContainer.#it.getStoreAsync<T>(asyncId);
   }
 
   #idMap: Map<number, number>;
@@ -98,6 +106,10 @@ export class AsyncContainer {
     return Array.from(this.#idMap.entries());
   }
 
+  setStore<T = AsyncResource>(asyncId: number, resource: T) {
+    this.#resourceMap.set(asyncId, resource as object);
+  }
+
   getStore<T = AsyncResource>(asyncId: number) {
     let resource: object | undefined = this.#resourceMap.get(asyncId);
 
@@ -120,5 +132,46 @@ export class AsyncContainer {
     }
 
     return undefined;
+  }
+
+  async getStoreAsync<T = AsyncResource>(asyncId: number) {
+    let resource: object | undefined = this.#resourceMap.get(asyncId);
+
+    if (resource != null) {
+      return resource as T;
+    }
+
+    const guard = this.options.searchGuard;
+    let id = this.#idMap.get(asyncId);
+    let sentinel = 0;
+
+    const finded = await new Promise<T | undefined>((resolve) => {
+      const handle = setInterval(() => {
+        if (id == null) {
+          clearInterval(handle);
+          resolve(undefined);
+          return;
+        }
+
+        if (sentinel > guard) {
+          clearInterval(handle);
+          resolve(undefined);
+          return;
+        }
+
+        resource = this.#resourceMap.get(id);
+
+        if (resource != null) {
+          clearInterval(handle);
+          resolve(resource as T);
+          return;
+        }
+
+        id = this.#idMap.get(id);
+        sentinel += 1;
+      });
+    });
+
+    return finded;
   }
 }
