@@ -1,7 +1,25 @@
 import { AsyncContainer } from '#/async-context/AsyncContainer';
 import { CE_RESOURCE_TYPE } from '#/interfaces/CE_RESOURCE_TYPE';
-import { AsyncLocalStorage, AsyncResource, executionAsyncId } from 'node:async_hooks';
+import {
+  AsyncLocalStorage,
+  AsyncResource,
+  executionAsyncId,
+  type AsyncResourceOptions,
+} from 'node:async_hooks';
 import { describe, expect, it } from 'vitest';
+
+class AsyncResourceTest extends AsyncResource {
+  #type: string;
+
+  get type() {
+    return this.#type;
+  }
+
+  constructor(type: string, triggerAsyncId?: number | AsyncResourceOptions) {
+    super(type, triggerAsyncId);
+    this.#type = type;
+  }
+}
 
 describe('requestContext with const requestContext', () => {
   it('constructor', () => {
@@ -30,7 +48,7 @@ describe('async-container', () => {
     const storage = new AsyncLocalStorage();
 
     storage.run({ name: 'dummy' }, () => {
-      const resource = new AsyncResource('custom-type');
+      const resource = new AsyncResourceTest('custom-type');
       resource.runInAsyncScope(() => {
         const finded = AsyncContainer.it.getStore(executionAsyncId());
         expect(finded instanceof AsyncResource).toBeTruthy();
@@ -47,7 +65,7 @@ describe('async-container', () => {
       const s2 = new AsyncLocalStorage();
 
       await s2.run({ age: 11 }, async () => {
-        const r2 = new AsyncResource('custom-type');
+        const r2 = new AsyncResourceTest('custom-type');
         await r2.runInAsyncScope(async () => {
           const finded = AsyncContainer.it.getStore(executionAsyncId());
           expect(finded instanceof AsyncResource).toBeTruthy();
@@ -56,7 +74,7 @@ describe('async-container', () => {
     }
 
     await s1.run({ name: 'dummy' }, async () => {
-      const r1 = new AsyncResource('custom-type');
+      const r1 = new AsyncResourceTest('custom-type');
       await r1.runInAsyncScope(async () => {
         await asyncTest();
       });

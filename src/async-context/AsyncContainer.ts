@@ -41,6 +41,8 @@ export class AsyncContainer {
 
   #resourceMap: Map<number, object>;
 
+  #resourceTypeMap: Map<number, string>;
+
   #watcher: AsyncWatcher;
 
   #options: IAsyncContainerOptions;
@@ -51,10 +53,13 @@ export class AsyncContainer {
       resourceTypes: options?.resourceTypes ?? [CE_RESOURCE_TYPE.PLUGIN],
     };
 
+    const typeMap = new Map<string, boolean>(
+      this.#options.resourceTypes.map<[string, boolean]>((resourceType) => [resourceType, true]),
+    );
     const idMap = new Map<number, number>();
     const resourceMap = new Map<number, object>();
+    const resourceTypeMap = new Map<number, string>();
     const watcher = new AsyncWatcher();
-    const types = this.#options.resourceTypes;
 
     watcher
       .setupInitHook()
@@ -79,8 +84,9 @@ export class AsyncContainer {
         }) => {
           idMap.set(asyncId, triggerAsyncId);
 
-          if (types.includes(type)) {
+          if (typeMap.get(type) != null) {
             resourceMap.set(asyncId, resource);
+            resourceTypeMap.set(asyncId, type);
           }
         },
       )
@@ -91,6 +97,7 @@ export class AsyncContainer {
 
     this.#idMap = idMap;
     this.#resourceMap = resourceMap;
+    this.#resourceTypeMap = resourceTypeMap;
     this.#watcher = watcher;
   }
 
@@ -110,10 +117,17 @@ export class AsyncContainer {
     this.#resourceMap.set(asyncId, resource as object);
   }
 
-  getStore<T = AsyncResource>(asyncId: number) {
+  getStore<T = AsyncResource>(asyncId: number, type?: string) {
     let resource: object | undefined = this.#resourceMap.get(asyncId);
 
-    if (resource != null) {
+    if (resource != null && type != null) {
+      const resourceType = this.#resourceTypeMap.get(asyncId);
+      if (resourceType === type) {
+        return resource as T;
+      }
+    }
+
+    if (resource != null && type == null) {
       return resource as T;
     }
 
@@ -123,7 +137,14 @@ export class AsyncContainer {
     while (id != null && sentinel < 1000) {
       resource = this.#resourceMap.get(id);
 
-      if (resource != null) {
+      if (resource != null && type != null) {
+        const resourceType = this.#resourceTypeMap.get(id);
+        if (resourceType === type) {
+          return resource as T;
+        }
+      }
+
+      if (resource != null && type == null) {
         return resource as T;
       }
 
@@ -134,10 +155,17 @@ export class AsyncContainer {
     return undefined;
   }
 
-  async getStoreAsync<T = AsyncResource>(asyncId: number) {
+  async getStoreAsync<T = AsyncResource>(asyncId: number, type?: string) {
     let resource: object | undefined = this.#resourceMap.get(asyncId);
 
-    if (resource != null) {
+    if (resource != null && type != null) {
+      const resourceType = this.#resourceTypeMap.get(asyncId);
+      if (resourceType === type) {
+        return resource as T;
+      }
+    }
+
+    if (resource != null && type == null) {
       return resource as T;
     }
 
@@ -161,7 +189,16 @@ export class AsyncContainer {
 
         resource = this.#resourceMap.get(id);
 
-        if (resource != null) {
+        if (resource != null && type != null) {
+          const resourceType = this.#resourceTypeMap.get(id);
+          if (resourceType === type) {
+            clearInterval(handle);
+            resolve(resource as T);
+            return;
+          }
+        }
+
+        if (resource != null && type == null) {
           clearInterval(handle);
           resolve(resource as T);
           return;
